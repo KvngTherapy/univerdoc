@@ -1,0 +1,133 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                   String               @id @default(uuid())
+  name                 String
+  email                String               @unique
+  username             String               @unique
+  password_hash        String
+  role                 String
+  matric_no            String?              @unique
+  department_id        String?
+  slot_number          Int?
+  is_active            Boolean              @default(true)
+  is_logged_in         Boolean              @default(false)
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @updatedAt
+
+  department           Department?          @relation(fields: [department_id], references: [id])
+  submissions          DocumentSubmission[] @relation("StudentSubmissions")
+  reviewed_submissions DocumentSubmission[] @relation("StaffReviews")
+  notifications        Notification[]
+  reported_issues      Issue[]              @relation("UserReportedIssues")
+  resolved_issues      Issue[]              @relation("UserResolvedIssues")
+  audit_logs           AuditLog[]
+
+  @@map("users")
+}
+
+model Department {
+  id             String         @id @default(uuid())
+  slug           String         @unique
+  name           String
+  icon           String
+  color          String
+  created_at     DateTime       @default(now())
+
+  staff          User[]
+  document_types DocumentType[]
+  issues         Issue[]
+
+  @@map("departments")
+}
+
+model DocumentType {
+  id            String               @id @default(uuid())
+  department_id String
+  slug          String               @unique
+  label         String
+  icon          String
+  is_required   Boolean              @default(true)
+  created_at    DateTime             @default(now())
+
+  department    Department           @relation(fields: [department_id], references: [id])
+  submissions   DocumentSubmission[]
+
+  @@map("document_types")
+}
+
+model DocumentSubmission {
+  id               String       @id @default(uuid())
+  student_id       String
+  document_type_id String
+  status           String       @default("not_submitted")
+  file_url         String?
+  file_name        String?
+  uploaded_at      DateTime?
+  reviewed_at      DateTime?
+  reviewed_by      String?
+  rejection_note   String?
+  version          Int          @default(1)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+
+  student          User         @relation("StudentSubmissions", fields: [student_id], references: [id])
+  document_type    DocumentType @relation(fields: [document_type_id], references: [id])
+  reviewer         User?        @relation("StaffReviews", fields: [reviewed_by], references: [id])
+
+  @@map("document_submissions")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  user_id    String
+  subject    String
+  body       String
+  type       String
+  is_read    Boolean  @default(false)
+  sent_at    DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@map("notifications")
+}
+
+model Issue {
+  id            String      @id @default(uuid())
+  reported_by   String
+  reporter_role String
+  department_id String?
+  subject       String
+  body          String
+  status        String      @default("open")
+  resolved_by   String?
+  resolved_at   DateTime?
+  created_at    DateTime    @default(now())
+
+  reporter      User        @relation("UserReportedIssues", fields: [reported_by], references: [id])
+  department    Department? @relation(fields: [department_id], references: [id])
+  resolver      User?       @relation("UserResolvedIssues", fields: [resolved_by], references: [id])
+
+  @@map("issues")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actor_id    String?
+  action      String
+  target_type String?
+  target_id   String?
+  metadata    String?
+  created_at  DateTime @default(now())
+
+  actor       User?    @relation(fields: [actor_id], references: [id])
+
+  @@map("audit_logs")
+}
