@@ -26,12 +26,15 @@ Vercel provides the fastest, most reliable global hosting for Vite React applica
 ### Step 2: Import into Vercel
 1. Log in to [Vercel](https://vercel.com).
 2. Click **"Add New..."** → **"Project"**.
-3. Select your `univerdoc` GitHub repository and click **Import**.
+3. Select the `KvngTherapy/univerdoc` GitHub repository and click **Import**.
 4. Configure Project Settings:
    - **Framework Preset**: `Vite`
-   - **Root Directory**: Click *Edit* and select **`frontend`**
-   - **Build Command**: `npm run build` (auto-detected)
-   - **Output Directory**: `dist` (auto-detected)
+   - **Root Directory**: Click *Edit* and select **`univerdoc/frontend`**
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install`
+
+> The repository contains the application in the nested `univerdoc/` directory. The Vercel root must be `univerdoc/frontend`, where the frontend's `package.json` is located.
 
 ### Step 3: Configure Environment Variables in Vercel
 Under **Environment Variables**, add:
@@ -39,9 +42,12 @@ Under **Environment Variables**, add:
 | :--- | :--- | :--- |
 | `VITE_API_BASE_URL` | `https://your-backend.onrender.com/api` | The live URL of your deployed backend |
 
+Add the variable for the **Production**, **Preview**, and **Development** environments as needed, then redeploy after changing it.
+
 ### Step 4: Click Deploy!
 Vercel will build and assign you a free public URL (e.g. `https://univerdoc-pti.vercel.app`).
-*(The included `frontend/vercel.json` ensures that deep client-side routes like `/admin`, `/student`, and `/dept/finance` reload without 404 errors).*
+
+The `frontend/vercel.json` file provides the SPA fallback required for client-side routes such as `/admin`, `/student`, and `/dept/finance`.
 
 ---
 
@@ -74,7 +80,7 @@ node prisma/seed.js
 2. Click **New +** → **Web Service**.
 3. Connect your `univerdoc` GitHub repository.
 4. Settings:
-   - **Root Directory**: `backend`
+   - **Root Directory**: `univerdoc/backend`
    - **Environment**: `Node`
    - **Build Command**: `npm install && npm run prisma:generate`
    - **Start Command**: `node server.js`
@@ -95,21 +101,15 @@ node prisma/seed.js
 
 ## ⚡ Option 2: Deploying Full-Stack Directly via Vercel CLI
 
-If you have the Vercel CLI installed:
-1. Open PowerShell in `univerdoc`:
-   ```powershell
-   npx vercel
-   ```
-2. Follow the prompts:
-   - Set up and deploy: **y**
-   - Which scope: *(select your account)*
-   - Link to existing project: **N**
-   - Project name: `univerdoc`
-   - In which directory is your code located: **./**
-3. Once linked, set your environment variables on Vercel and deploy to production:
-   ```powershell
-   npx vercel --prod
-   ```
+The recommended setup is separate frontend and backend services. If you use the Vercel CLI for the frontend, run it from the frontend directory:
+
+```powershell
+cd univerdoc/frontend
+npx vercel
+npx vercel --prod
+```
+
+Set `VITE_API_BASE_URL` in the Vercel project before deploying. The Express backend still needs to be deployed separately unless it is explicitly converted to Vercel serverless functions.
 
 ---
 
